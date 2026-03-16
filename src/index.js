@@ -23,7 +23,7 @@ import {
 import { buildProposalActions, buildProposalEmbed } from './embed.js';
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds]
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
 });
 
 function parseCustomId(customId) {
@@ -278,6 +278,23 @@ client.on('interactionCreate', async (interaction) => {
         ephemeral: true
       });
     }
+  }
+});
+
+client.on('messageCreate', async (message) => {
+  // Don't respond to bot messages or our own messages
+  if (message.author.bot) return;
+
+  // Don't respond to messages that look like commands
+  if (message.content.startsWith('/')) return;
+
+  // Random chance to respond (about 10% of messages) to avoid spam
+  if (Math.random() > 0.1) return;
+
+  try {
+    await message.reply('Try typing `/propose` to throw a fun event! Visit https://github.com/dery168/HypeChain for more info.');
+  } catch (error) {
+    console.error('Error sending promotional message:', error);
   }
 });
 

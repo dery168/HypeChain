@@ -13,6 +13,7 @@ A social coordination tool for Discord. Users propose ideas, others join or leav
 | Forward Here *(Creator only)* | Mirrors the proposal to the current channel, keeps it in sync |
 | Modify *(Creator only)* | Opens a modal to edit the proposal text and syncs all copies |
 | Cancel *(Creator only)* | Deletes the proposal and removes all copies from channels |
+| Promotional Messages | Occasionally replies to messages promoting the `/propose` command |
 | Supabase persistence | All state survives bot restarts |
 
 ---
@@ -97,7 +98,7 @@ SUPABASE_SERVICE_ROLE_KEY= # service_role key — Supabase Dashboard → Setting
 ### 2. Discord Bot Invite
 1. In Discord Developer Portal → OAuth2 → URL Generator:
    - Scopes: `bot`, `applications.commands`
-   - Bot Permissions: `View Channels`, `Send Messages`, `Embed Links`, `Read Message History`
+   - Bot Permissions: `View Channels`, `Send Messages`, `Embed Links`, `Read Message History`, `Read Messages`
 2. Open the generated URL in browser.
 3. Select your test server and click Authorize.
 
