@@ -282,11 +282,15 @@ client.on('interactionCreate', async (interaction) => {
 });
 
 client.on('messageCreate', async (message) => {
-  // Don't respond to bot messages or our own messages
-  if (message.author.bot) return;
-
   // Log that we received a message for debugging
   console.log(`Received message from ${message.author.username}: ${message.content || '[no content]'}`);
+
+  // Don't respond to bot messages or our own messages
+  if (message.author.bot) {
+    console.log('Ignoring message from bot');
+    return;
+  }
+
 
   // Random chance to respond (about 50% of messages) for testing - reduce later to avoid spam
   if (Math.random() > 0.5) {
