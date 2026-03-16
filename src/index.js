@@ -282,11 +282,16 @@ client.on('interactionCreate', async (interaction) => {
 });
 
 client.on('messageCreate', async (message) => {
+  // Log ALL messages for debugging
+  console.log(`Message received - Guild: ${message.guild ? message.guild.name : 'DM'}, Author: ${message.author.username}, Content: ${message.content || '[no content]'}`);
+
   // Only respond in DMs, not in server channels
   if (message.guild) {
     console.log('Ignoring message from server channel');
     return;
   }
+
+  console.log('Message is in DM channel');
 
   // Don't respond to bot messages or our own messages
   if (message.author.bot) {
@@ -294,14 +299,13 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
-  // Log that we received a DM for debugging
-  console.log(`Received DM from ${message.author.username}: ${message.content || '[no content]'}`);
+  console.log('Message is from a user, not a bot');
 
-  // Random chance to respond (about 50% of messages) for testing - reduce later to avoid spam
-  if (Math.random() > 0.5) {
-    console.log('Skipping response due to random chance');
-    return;
-  }
+  // For testing, respond to EVERY DM (remove random chance)
+  // if (Math.random() > 0.5) {
+  //   console.log('Skipping response due to random chance');
+  //   return;
+  // }
 
   try {
     console.log('Attempting to reply to DM...');
@@ -309,6 +313,7 @@ client.on('messageCreate', async (message) => {
     console.log('Successfully sent promotional message');
   } catch (error) {
     console.error('Error sending promotional message:', error);
+    console.error('Error details:', error.message);
   }
 });
 
