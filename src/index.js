@@ -23,7 +23,7 @@ import {
 import { buildProposalActions, buildProposalEmbed } from './embed.js';
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages]
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
 });
 
 function parseCustomId(customId) {
@@ -285,11 +285,19 @@ client.on('messageCreate', async (message) => {
   // Don't respond to bot messages or our own messages
   if (message.author.bot) return;
 
-  // Random chance to respond (about 10% of messages) to avoid spam
-  if (Math.random() > 0.1) return;
+  // Log that we received a message for debugging
+  console.log(`Received message from ${message.author.username}: ${message.content || '[no content]'}`);
+
+  // Random chance to respond (about 50% of messages) for testing - reduce later to avoid spam
+  if (Math.random() > 0.5) {
+    console.log('Skipping response due to random chance');
+    return;
+  }
 
   try {
-    await message.reply('Try typing `/propose` to throw a fun event! Visit https://github.com/dery168/HypeChain for more info.');
+    console.log('Attempting to reply to message...');
+    await message.reply('Add me to your server and type `/propose` to meet up your friends! https://github.com/dery168/HypeChain.');
+    console.log('Successfully sent promotional message');
   } catch (error) {
     console.error('Error sending promotional message:', error);
   }
