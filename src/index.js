@@ -23,7 +23,7 @@ import {
 import { buildProposalActions, buildProposalEmbed } from './embed.js';
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.DirectMessages]
 });
 
 function parseCustomId(customId) {
@@ -282,8 +282,11 @@ client.on('interactionCreate', async (interaction) => {
 });
 
 client.on('messageCreate', async (message) => {
-  // Log that we received a message for debugging
-  console.log(`Received message from ${message.author.username}: ${message.content || '[no content]'}`);
+  // Only respond in DMs, not in server channels
+  if (message.guild) {
+    console.log('Ignoring message from server channel');
+    return;
+  }
 
   // Don't respond to bot messages or our own messages
   if (message.author.bot) {
@@ -291,6 +294,8 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
+  // Log that we received a DM for debugging
+  console.log(`Received DM from ${message.author.username}: ${message.content || '[no content]'}`);
 
   // Random chance to respond (about 50% of messages) for testing - reduce later to avoid spam
   if (Math.random() > 0.5) {
@@ -299,7 +304,7 @@ client.on('messageCreate', async (message) => {
   }
 
   try {
-    console.log('Attempting to reply to message...');
+    console.log('Attempting to reply to DM...');
     await message.reply('Add me to your server and type `/propose` to meet up your friends! https://github.com/dery168/HypeChain.');
     console.log('Successfully sent promotional message');
   } catch (error) {
