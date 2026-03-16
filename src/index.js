@@ -2,17 +2,23 @@ import {
   ChannelType,
   Client,
   GatewayIntentBits,
-  PermissionsBitField
+  PermissionsBitField,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+  ActionRowBuilder
 } from 'discord.js';
 import { config } from './config.js';
 import {
   addIdeaMessage,
   createIdea,
+  deleteIdea,
   getIdea,
   getIdeaMessages,
   getParticipants,
   removeIdeaMessage,
-  toggleParticipant
+  toggleParticipant,
+  updateIdeaText
 } from './db.js';
 import { buildProposalActions, buildProposalEmbed } from './embed.js';
 
@@ -99,6 +105,14 @@ async function handleForward(interaction, ideaId) {
     return;
   }
 
+  if (idea.creator_id !== interaction.user.id) {
+    await interaction.reply({
+      content: 'Only the proposal creator can forward it.',
+      ephemeral: true
+    });
+    return;
+  }
+
   if (!interaction.channel || interaction.channel.type !== ChannelType.GuildText) {
     await interaction.reply({
       content: 'This can only be used in a text channel.',
@@ -138,6 +152,64 @@ async function handleForward(interaction, ideaId) {
   await interaction.reply({ content: 'Forwarded to this channel and synced.', ephemeral: true });
 }
 
+async function handleCancel(interaction, ideaId) {
+  const idea = await getIdea(ideaId);
+  if (!idea) {
+    await interaction.reply({
+      content: 'This proposal was not found.',
+      ephemeral: true
+    });
+    return;
+  }
+
+  if (idea.creator_id !== interaction.user.id) {
+    await interaction.reply({
+      content: 'Only the proposal creator can cancel it.',
+      ephemeral: true
+    });
+    return;
+  }
+
+  await deleteIdea(ideaId);
+  await interaction.reply({ content: 'Proposal cancelled and removed from all channels.', ephemeral: true });
+}
+
+async function handleModify(interaction, ideaId) {
+  const idea = await getIdea(ideaId);
+  if (!idea) {
+    await interaction.reply({
+      content: 'This proposal was not found.',
+      ephemeral: true
+    });
+    return;
+  }
+
+  if (idea.creator_id !== interaction.user.id) {
+    await interaction.reply({
+      content: 'Only the proposal creator can modify it.',
+      ephemeral: true
+    });
+    return;
+  }
+
+  const modal = new ModalBuilder()
+    .setCustomId(`modify_modal:${ideaId}`)
+    .setTitle('Modify Proposal');
+
+  const textInput = new TextInputBuilder()
+    .setCustomId('new_text')
+    .setLabel('New proposal text')
+    .setStyle(TextInputStyle.Paragraph)
+    .setValue(idea.text)
+    .setRequired(true)
+    .setMaxLength(500);
+
+  const actionRow = new ActionRowBuilder().addComponents(textInput);
+  modal.addComponents(actionRow);
+
+  await interaction.showModal(modal);
+}
+
 client.once('ready', () => {
   console.log(`Logged in as ${client.user.tag}`);
 });
@@ -147,6 +219,26 @@ client.on('interactionCreate', async (interaction) => {
     if (interaction.isChatInputCommand()) {
       if (interaction.commandName === 'propose') {
         await handlePropose(interaction);
+      }
+      return;
+    }
+
+    if (interaction.isModalSubmit()) {
+      if (interaction.customId.startsWith('modify_modal:')) {
+        const ideaId = interaction.customId.split(':')[1];
+        const newText = interaction.fields.getTextInputValue('new_text').trim();
+
+        if (!newText) {
+          await interaction.reply({
+            content: 'Proposal text cannot be empty.',
+            ephemeral: true
+          });
+          return;
+        }
+
+        await updateIdeaText(ideaId, newText);
+        await interaction.reply({ content: 'Proposal updated and synced across all channels.', ephemeral: true });
+        await syncAllMessagesForIdea(ideaId);
       }
       return;
     }
@@ -165,6 +257,17 @@ client.on('interactionCreate', async (interaction) => {
 
       if (action === 'forward') {
         await handleForward(interaction, ideaId);
+        return;
+      }
+
+      if (action === 'cancel') {
+        await handleCancel(interaction, ideaId);
+        return;
+      }
+
+      if (action === 'modify') {
+        await handleModify(interaction, ideaId);
+        return;
       }
     }
   } catch (error) {

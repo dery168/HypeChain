@@ -8,9 +8,11 @@ A social coordination tool for Discord. Users propose ideas, others join or leav
 
 | Feature | Description |
 |---|---|
-| `/propose [text]` | Creates a new proposal embed with Join/Leave and Forward buttons |
+| `/propose [text]` | Creates a new proposal embed with Join/Leave and creator buttons |
 | Join / Leave toggle | Adds or removes you from participant list, syncs all copies |
-| Forward Here | Mirrors the proposal to the current channel, keeps it in sync |
+| Forward Here *(Creator only)* | Mirrors the proposal to the current channel, keeps it in sync |
+| Modify *(Creator only)* | Opens a modal to edit the proposal text and syncs all copies |
+| Cancel *(Creator only)* | Deletes the proposal and removes all copies from channels |
 | Supabase persistence | All state survives bot restarts |
 
 ---

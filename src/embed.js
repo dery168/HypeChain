@@ -20,6 +20,14 @@ export function buildProposalActions(ideaId) {
     new ButtonBuilder()
       .setCustomId(`forward:${ideaId}`)
       .setLabel('Forward Here')
-      .setStyle(ButtonStyle.Primary)
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId(`modify:${ideaId}`)
+      .setLabel('Modify')
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(`cancel:${ideaId}`)
+      .setLabel('Cancel')
+      .setStyle(ButtonStyle.Danger)
   );
 }

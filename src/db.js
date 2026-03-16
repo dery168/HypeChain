@@ -52,7 +52,7 @@ export async function toggleParticipant(ideaId, userId) {
 export async function getIdea(ideaId) {
   const { data, error } = await supabase
     .from('ideas')
-    .select('idea_id, text')
+    .select('idea_id, text, creator_id')
     .eq('idea_id', ideaId)
     .maybeSingle();
 
@@ -88,6 +88,24 @@ export async function removeIdeaMessage(ideaId, messageId) {
     .delete()
     .eq('idea_id', ideaId)
     .eq('message_id', messageId);
+
+  if (error) throw error;
+}
+
+export async function deleteIdea(ideaId) {
+  const { error } = await supabase
+    .from('ideas')
+    .delete()
+    .eq('idea_id', ideaId);
+
+  if (error) throw error;
+}
+
+export async function updateIdeaText(ideaId, newText) {
+  const { error } = await supabase
+    .from('ideas')
+    .update({ text: newText })
+    .eq('idea_id', ideaId);
 
   if (error) throw error;
 }
