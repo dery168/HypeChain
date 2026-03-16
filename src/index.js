@@ -23,7 +23,7 @@ import {
 import { buildProposalActions, buildProposalEmbed } from './embed.js';
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages]
 });
 
 function parseCustomId(customId) {
@@ -284,9 +284,6 @@ client.on('interactionCreate', async (interaction) => {
 client.on('messageCreate', async (message) => {
   // Don't respond to bot messages or our own messages
   if (message.author.bot) return;
-
-  // Don't respond to messages that look like commands
-  if (message.content.startsWith('/')) return;
 
   // Random chance to respond (about 10% of messages) to avoid spam
   if (Math.random() > 0.1) return;

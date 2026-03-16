@@ -98,7 +98,7 @@ SUPABASE_SERVICE_ROLE_KEY= # service_role key — Supabase Dashboard → Setting
 ### 2. Discord Bot Invite
 1. In Discord Developer Portal → OAuth2 → URL Generator:
    - Scopes: `bot`, `applications.commands`
-   - Bot Permissions: `View Channels`, `Send Messages`, `Embed Links`, `Read Message History`, `Read Messages`
+   - Bot Permissions: `View Channels`, `Send Messages`, `Embed Links`, `Read Message History`
 2. Open the generated URL in browser.
 3. Select your test server and click Authorize.
 
