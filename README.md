@@ -104,22 +104,12 @@ SUPABASE_SERVICE_ROLE_KEY= # service_role key — Supabase Dashboard → Setting
 
 ### 3. Install Dependencies
 
-PowerShell:
-```powershell
-npm.cmd install
-```
-
 Git Bash:
 ```bash
 npm install
 ```
 
 ### 4. Register Slash Commands
-
-PowerShell:
-```powershell
-npm.cmd run register:commands
-```
 
 Git Bash:
 ```bash
@@ -130,11 +120,6 @@ npm run register:commands
 > Run this once, or again whenever command definitions change.
 
 ### 5. Start Bot
-
-PowerShell:
-```powershell
-npm.cmd start
-```
 
 Git Bash:
 ```bash

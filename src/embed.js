@@ -27,7 +27,7 @@ export function buildProposalActions(ideaId) {
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId(`cancel:${ideaId}`)
-      .setLabel('Cancel')
+      .setLabel('Delete')
       .setStyle(ButtonStyle.Danger)
   );
 }

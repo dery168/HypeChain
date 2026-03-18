@@ -92,6 +92,15 @@ export async function removeIdeaMessage(ideaId, messageId) {
   if (error) throw error;
 }
 
+export async function deleteIdeaMessages(ideaId) {
+  const { error } = await supabase
+    .from('idea_messages')
+    .delete()
+    .eq('idea_id', ideaId);
+
+  if (error) throw error;
+}
+
 export async function deleteIdea(ideaId) {
   const { error } = await supabase
     .from('ideas')

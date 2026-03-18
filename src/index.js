@@ -6,13 +6,15 @@ import {
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
-  ActionRowBuilder
+  ActionRowBuilder,
+  EmbedBuilder
 } from 'discord.js';
 import { config } from './config.js';
 import {
   addIdeaMessage,
   createIdea,
   deleteIdea,
+  deleteIdeaMessages,
   getIdea,
   getIdeaMessages,
   getParticipants,
@@ -170,8 +172,44 @@ async function handleCancel(interaction, ideaId) {
     return;
   }
 
+  const links = await getIdeaMessages(ideaId);
+  const cancelledEmbed = buildCancelledEmbed(idea.text);
+
+  for (const link of links) {
+    try {
+      const channel = await client.channels.fetch(link.channel_id);
+      if (!channel || channel.type !== ChannelType.GuildText) {
+        continue;
+      }
+
+      const message = await channel.messages.fetch(link.message_id);
+      try {
+        await message.delete();
+      } catch (deleteError) {
+        console.log('Could not delete cancelled proposal message, editing instead', link, deleteError?.message || deleteError);
+        try {
+          await message.edit({ embeds: [cancelledEmbed], components: [] });
+        } catch (editError) {
+          console.log('Could not edit cancelled proposal message', link, editError?.message || editError);
+        }
+      }
+    } catch (error) {
+      // Message deleted or inaccessible; remove stale link and continue.
+      console.log('Could not fetch cancel target message link', link, error?.message || error);
+    }
+  }
+
+  await deleteIdeaMessages(ideaId);
   await deleteIdea(ideaId);
+
   await interaction.reply({ content: 'Proposal cancelled and removed from all channels.', ephemeral: true });
+}
+
+function buildCancelledEmbed(ideaText) {
+  return new EmbedBuilder()
+    .setTitle('Hype Chain Proposal (Cancelled)')
+    .setDescription(ideaText)
+    .addFields({ name: 'Status', value: 'Cancelled' });
 }
 
 async function handleModify(interaction, ideaId) {
