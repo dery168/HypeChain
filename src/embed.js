@@ -36,7 +36,7 @@ export function buildProposalActions(ideaId, state = 'active') {
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId(`cancel:${ideaId}`)
-      .setLabel(state === 'cancelled' ? 'Reactivate' : 'Cancel')
+      .setLabel(state === 'cancelled' ? 'Reopen' : 'Cancel')
       .setStyle(ButtonStyle.Danger)
   );
 }
