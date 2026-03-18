@@ -3,12 +3,21 @@ import { supabase } from './supabase.js';
 export async function createIdea(creatorId, text) {
   const { data, error } = await supabase
     .from('ideas')
-    .insert({ creator_id: creatorId, text })
-    .select('idea_id, text')
+    .insert({ creator_id: creatorId, text, state: 'active' })
+    .select('idea_id, text, state')
     .single();
 
   if (error) throw error;
   return data;
+}
+
+export async function updateIdeaState(ideaId, state) {
+  const { error } = await supabase
+    .from('ideas')
+    .update({ state })
+    .eq('idea_id', ideaId);
+
+  if (error) throw error;
 }
 
 export async function addIdeaMessage({ ideaId, guildId, channelId, messageId }) {
@@ -52,7 +61,7 @@ export async function toggleParticipant(ideaId, userId) {
 export async function getIdea(ideaId) {
   const { data, error } = await supabase
     .from('ideas')
-    .select('idea_id, text, creator_id')
+    .select('idea_id, text, creator_id, state')
     .eq('idea_id', ideaId)
     .maybeSingle();
 

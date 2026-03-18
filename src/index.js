@@ -6,8 +6,7 @@ import {
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
-  ActionRowBuilder,
-  EmbedBuilder
+  ActionRowBuilder
 } from 'discord.js';
 import { config } from './config.js';
 import {
@@ -20,6 +19,7 @@ import {
   getParticipants,
   removeIdeaMessage,
   toggleParticipant,
+  updateIdeaState,
   updateIdeaText
 } from './db.js';
 import { buildProposalActions, buildProposalEmbed } from './embed.js';
@@ -44,8 +44,8 @@ async function syncAllMessagesForIdea(ideaId) {
     return;
   }
 
-  const embed = buildProposalEmbed(idea.text, participants);
-  const components = [buildProposalActions(ideaId)];
+  const embed = buildProposalEmbed(idea.text, participants, idea.state);
+  const components = [buildProposalActions(ideaId, idea.state)];
 
   for (const link of links) {
     try {
@@ -68,8 +68,8 @@ async function handlePropose(interaction) {
   const text = interaction.options.getString('text', true).trim();
   const idea = await createIdea(interaction.user.id, text);
 
-  const embed = buildProposalEmbed(idea.text, []);
-  const components = [buildProposalActions(idea.idea_id)];
+  const embed = buildProposalEmbed(idea.text, [], idea.state);
+  const components = [buildProposalActions(idea.idea_id, idea.state)];
 
   await interaction.reply({ embeds: [embed], components });
   const message = await interaction.fetchReply();
@@ -87,6 +87,14 @@ async function handleJoin(interaction, ideaId) {
   if (!idea) {
     await interaction.reply({
       content: 'This proposal was not found.',
+      ephemeral: true
+    });
+    return;
+  }
+
+  if (idea.state === 'cancelled') {
+    await interaction.reply({
+      content: 'This proposal is cancelled. Reactivate it before joining.',
       ephemeral: true
     });
     return;
@@ -110,6 +118,14 @@ async function handleForward(interaction, ideaId) {
   if (idea.creator_id !== interaction.user.id) {
     await interaction.reply({
       content: 'Only the proposal creator can forward it.',
+      ephemeral: true
+    });
+    return;
+  }
+
+  if (idea.state === 'cancelled') {
+    await interaction.reply({
+      content: 'Cannot forward a cancelled proposal. Reactivate first.',
       ephemeral: true
     });
     return;
@@ -140,8 +156,8 @@ async function handleForward(interaction, ideaId) {
   }
 
   const posted = await interaction.channel.send({
-    embeds: [buildProposalEmbed(idea.text, await getParticipants(ideaId))],
-    components: [buildProposalActions(ideaId)]
+    embeds: [buildProposalEmbed(idea.text, await getParticipants(ideaId), idea.state)],
+    components: [buildProposalActions(ideaId, idea.state)]
   });
 
   await addIdeaMessage({
@@ -166,50 +182,24 @@ async function handleCancel(interaction, ideaId) {
 
   if (idea.creator_id !== interaction.user.id) {
     await interaction.reply({
-      content: 'Only the proposal creator can cancel it.',
+      content: 'Only the proposal creator can cancel/reactivate it.',
       ephemeral: true
     });
     return;
   }
 
-  const links = await getIdeaMessages(ideaId);
-  const cancelledEmbed = buildCancelledEmbed(idea.text);
+  const newState = idea.state === 'cancelled' ? 'active' : 'cancelled';
+  await updateIdeaState(ideaId, newState);
 
-  for (const link of links) {
-    try {
-      const channel = await client.channels.fetch(link.channel_id);
-      if (!channel || channel.type !== ChannelType.GuildText) {
-        continue;
-      }
+  await interaction.deferUpdate();
+  await syncAllMessagesForIdea(ideaId);
 
-      const message = await channel.messages.fetch(link.message_id);
-      try {
-        await message.delete();
-      } catch (deleteError) {
-        console.log('Could not delete cancelled proposal message, editing instead', link, deleteError?.message || deleteError);
-        try {
-          await message.edit({ embeds: [cancelledEmbed], components: [] });
-        } catch (editError) {
-          console.log('Could not edit cancelled proposal message', link, editError?.message || editError);
-        }
-      }
-    } catch (error) {
-      // Message deleted or inaccessible; remove stale link and continue.
-      console.log('Could not fetch cancel target message link', link, error?.message || error);
-    }
-  }
-
-  await deleteIdeaMessages(ideaId);
-  await deleteIdea(ideaId);
-
-  await interaction.reply({ content: 'Proposal cancelled and removed from all channels.', ephemeral: true });
-}
-
-function buildCancelledEmbed(ideaText) {
-  return new EmbedBuilder()
-    .setTitle('Hype Chain Proposal (Cancelled)')
-    .setDescription(ideaText)
-    .addFields({ name: 'Status', value: 'Cancelled' });
+  await interaction.followUp({
+    content: newState === 'cancelled'
+      ? 'Proposal is now cancelled. Reactivate to reopen.'
+      : 'Proposal is now active again.',
+    ephemeral: true
+  });
 }
 
 async function handleModify(interaction, ideaId) {
@@ -225,6 +215,14 @@ async function handleModify(interaction, ideaId) {
   if (idea.creator_id !== interaction.user.id) {
     await interaction.reply({
       content: 'Only the proposal creator can modify it.',
+      ephemeral: true
+    });
+    return;
+  }
+
+  if (idea.state === 'cancelled') {
+    await interaction.reply({
+      content: 'Cannot modify a cancelled proposal. Reactivate first.',
       ephemeral: true
     });
     return;

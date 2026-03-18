@@ -5,6 +5,7 @@ create table if not exists public.ideas (
   idea_id uuid primary key default gen_random_uuid(),
   creator_id text not null,
   text text not null,
+  state text not null default 'active',
   created_at timestamptz not null default now()
 );
 
